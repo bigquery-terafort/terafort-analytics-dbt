@@ -140,8 +140,3 @@ vars:
   freshness_warn_after_hours: 36
   freshness_error_after_hours: 72
 
-# ================================================================
-# ELEMENTARY
-# ================================================================
-elementary:
-  +schema: elementary
