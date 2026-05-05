@@ -1,0 +1,38 @@
+# ================================================================
+# YAMLLINT CONFIGURATION
+# ================================================================
+# Keeps all YAML files (dbt configs, GitHub workflows) clean.
+# ================================================================
+
+extends: default
+
+rules:
+  # Allow longer lines for readability
+  line-length:
+    max: 200
+    level: warning
+
+  # Block sequences are fine without indentation
+  indentation:
+    spaces: 2
+    indent-sequences: true
+
+  # We use comments for documentation
+  comments:
+    min-spaces-from-content: 1
+
+  # Allow truthy values like 'on:' in GitHub workflows
+  truthy:
+    allowed-values: ['true', 'false', 'on', 'off', 'yes', 'no']
+    check-keys: false
+
+  # Don't enforce document start ---
+  document-start:
+    present: false
+
+ignore: |
+  target/
+  dbt_packages/
+  logs/
+  venv/
+  .venv/
