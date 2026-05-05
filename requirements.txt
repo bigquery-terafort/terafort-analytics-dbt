@@ -21,7 +21,7 @@ dbt-bigquery==1.10.0
 # --- Elementary observability ---------------------------------
 # [bigquery] extra installs the BQ-specific dependencies for the
 # `edr` CLI tool used to generate HTML reports.
-elementary-data[bigquery]==0.16.0
+elementary-data[bigquery]==0.17.0
 
 # --- Google auth (needed by both dbt and elementary) ----------
 google-cloud-bigquery>=3.20.0,<4.0.0
