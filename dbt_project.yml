@@ -1,0 +1,147 @@
+# ================================================================
+# TERAFORT ANALYTICS — dbt PROJECT CONFIG (PRODUCTION-GRADE)
+# ================================================================
+# Project: bigquery-terafort/terafort-analytics-dbt
+# Warehouse: BigQuery (project: terafort, location: US)
+# Environments: dev (terafort_dev_*) and prod (terafort_prod_*)
+# ================================================================
+
+name: 'terafort_analytics'
+version: '1.0.0'
+config-version: 2
+
+profile: 'terafort'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+# ================================================================
+# QUOTING — BigQuery best practice
+# ================================================================
+quoting:
+  database: false
+  schema: false
+  identifier: false
+
+# ================================================================
+# REQUIRED dbt VERSION
+# ================================================================
+require-dbt-version: [">=1.10.0", "<2.0.0"]
+
+# ================================================================
+# DISPATCH — for cross-package macro overrides
+# ================================================================
+dispatch:
+  - macro_namespace: dbt_utils
+    search_order: ['terafort_analytics', 'dbt_utils']
+
+# ================================================================
+# ON-RUN HOOKS
+# ================================================================
+on-run-start:
+  - "{{ log('Starting dbt run on target ' ~ target.name, info=true) }}"
+
+on-run-end:
+  - "{{ log('Completed dbt run on target ' ~ target.name, info=true) }}"
+
+# ================================================================
+# MODEL CONFIGURATION
+# ================================================================
+models:
+  terafort_analytics:
+
+    # --- STAGING LAYER ----------------------------------------
+    staging:
+      +materialized: view
+      +schema: staging
+      +persist_docs:
+        relation: true
+        columns: true
+
+      android:
+        +tags: ["android", "staging", "daily"]
+      ios:
+        +tags: ["ios", "staging", "daily"]
+      cross_platform:
+        +tags: ["cross_platform", "staging", "daily"]
+
+    # --- INTERMEDIATE LAYER -----------------------------------
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+      +tags: ["intermediate", "daily"]
+      +persist_docs:
+        relation: true
+        columns: true
+
+    # --- MARTS LAYER ------------------------------------------
+    marts:
+      +materialized: table
+      +schema: marts
+      +tags: ["marts", "daily"]
+      +persist_docs:
+        relation: true
+        columns: true
+
+      +partition_by:
+        field: date
+        data_type: date
+        granularity: day
+      +cluster_by: ["package_name", "platform"]
+
+      +contract:
+        enforced: false
+
+# ================================================================
+# SEEDS
+# ================================================================
+seeds:
+  terafort_analytics:
+    +schema: seeds
+    +tags: ["seed"]
+    +persist_docs:
+      relation: true
+      columns: true
+    +quote_columns: false
+
+# ================================================================
+# SNAPSHOTS
+# ================================================================
+snapshots:
+  terafort_analytics:
+    +schema: snapshots
+    +tags: ["snapshot"]
+
+# ================================================================
+# TESTS
+# ================================================================
+tests:
+  +severity: warn
+  +store_failures: true
+  +schema: dbt_test_failures
+
+# ================================================================
+# VARIABLES
+# ================================================================
+vars:
+  start_date: '2024-01-01'
+  source_project: 'terafort'
+  enable_full_refresh: false
+  freshness_warn_after_hours: 36
+  freshness_error_after_hours: 72
+
+# ================================================================
+# ELEMENTARY
+# ================================================================
+elementary:
+  +schema: elementary
