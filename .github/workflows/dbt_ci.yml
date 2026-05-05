@@ -1,6 +1,6 @@
 # ================================================================
 # CI WORKFLOW — Pull Request Validation (Production-Grade)
-# ================================================================
+# ===============================================================
 # 5-stage validation pipeline:
 #   1. Lint (sqlfluff + yamllint + secret scan) — fails fast
 #   2. dbt parse (catches Jinja/YAML errors)
