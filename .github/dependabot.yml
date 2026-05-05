@@ -1,0 +1,57 @@
+# ================================================================
+# DEPENDABOT — Automated Dependency Updates
+# ================================================================
+# Opens PRs weekly when:
+#   - Python packages have security/feature updates
+#   - dbt packages have new versions
+#   - GitHub Actions have new versions
+#
+# Auto-merges patch-level security fixes; requires review for major.
+# ================================================================
+
+version: 2
+updates:
+  # Python (dbt + Elementary + linters)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Karachi"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    groups:
+      dbt:
+        patterns:
+          - "dbt-*"
+      linters:
+        patterns:
+          - "sqlfluff*"
+          - "yamllint"
+          - "detect-secrets"
+
+  # GitHub Actions versions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Karachi"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+
+  # dbt packages (in packages.yml)
+  # Note: Dependabot doesn't natively support packages.yml.
+  # We use a scheduled GitHub Action to check for dbt package
+  # updates (added in Stage 11 — observability).
