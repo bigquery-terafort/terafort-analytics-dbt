@@ -1,0 +1,145 @@
+# ================================================================
+# PRODUCTION WORKFLOW — Daily Run + Manifest Publishing
+# ================================================================
+# Triggers:
+#   - Cron 8:30 AM UTC daily
+#   - Manual via workflow_dispatch
+#   - Push to main (auto-deploy on merge)
+#
+# Stages:
+#   1. Source freshness check (alerts on stale data)
+#   2. dbt seed (lookup tables)
+#   3. dbt run (build models)
+#   4. dbt test (data quality validation)
+#   5. Elementary report generation
+#   6. Publish manifest as artifact (used by Slim CI)
+#   7. Deploy dbt docs to GitHub Pages
+#   8. Upload Elementary HTML report
+# ================================================================
+
+name: PROD - Daily Pipeline Run
+
+on:
+  schedule:
+    - cron: '30 8 * * *'      # 8:30 AM UTC daily
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target environment'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - prod
+          - dev
+      full_refresh:
+        description: 'Full refresh (rebuilds all incremental models)'
+        required: false
+        default: false
+        type: boolean
+      skip_freshness:
+        description: 'Skip source freshness check'
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches: [main]
+    paths:
+      - 'models/**'
+      - 'macros/**'
+      - 'dbt_project.yml'
+
+concurrency:
+  group: prod-run
+  cancel-in-progress: false
+
+env:
+  DBT_PROFILES_DIR: ./
+  DBT_GCP_PROJECT: ${{ vars.DBT_GCP_PROJECT }}
+  DBT_GCP_KEYFILE_JSON: ${{ secrets.GCP_SA_KEY }}
+  TARGET: ${{ github.event.inputs.target || 'prod' }}
+  PYTHON_VERSION: '3.11'
+
+# Permissions for deploying docs to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  # ==============================================================
+  # JOB 1: Source freshness check
+  # ==============================================================
+  freshness:
+    name: Source freshness check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.inputs.skip_freshness != 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install dbt packages
+        run: dbt deps --profiles-dir ./
+
+      - name: Run source freshness check
+        run: dbt source freshness --target ${{ env.TARGET }} --profiles-dir ./
+        continue-on-error: true
+
+      - name: Upload freshness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: freshness-report-${{ github.run_number }}
+          path: target/sources.json
+          retention-days: 14
+
+  # ==============================================================
+  # JOB 2: Main pipeline run
+  # ==============================================================
+  run-pipeline:
+    name: Run dbt pipeline
+    needs: freshness
+    if: always() && (needs.freshness.result == 'success' || needs.freshness.result == 'skipped' || github.event.inputs.skip_freshness == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    outputs:
+      run_status: ${{ steps.dbt-run.outcome }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install dbt packages
+        run: dbt deps --profiles-dir ./
+
+      - name: Verify BigQuery connection
+        run: dbt debug --target ${{ env.TARGET }} --profiles-dir ./
+
+      - name: Run dbt seed
+        run: dbt seed --target ${{ env.TARGET }} --profiles-dir ./
+
+      - name: Run dbt models
+        id: dbt-run
+        run: |
+          if [[ "${{ github.
