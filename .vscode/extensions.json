@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "innoverio.vscode-dbt-power-user",
+    "redhat.vscode-yaml",
+    "dorzey.vscode-sqlfluff",
+    "wayou.vscode-todo-highlight",
+    "eamodio.gitlens",
+    "github.vscode-github-actions",
+    "yzhang.markdown-all-in-one",
+    "editorconfig.editorconfig"
+  ]
+}
