@@ -15,8 +15,8 @@
 # --- dbt Core + BigQuery adapter -------------------------------
 # As of late 2024, dbt-core must be installed explicitly alongside
 # the adapter (was implicit in older versions).
-dbt-core==1.10.0
-dbt-bigquery==1.10.0
+dbt-core==1.11.8
+dbt-bigquery==1.11.1
 
 # --- Elementary observability ---------------------------------
 # [bigquery] extra installs the BQ-specific dependencies for the
