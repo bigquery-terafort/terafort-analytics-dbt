@@ -1,0 +1,42 @@
+{
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false,
+
+  "[sql]": {
+    "editor.tabSize": 4,
+    "editor.defaultFormatter": "dorzey.vscode-sqlfluff"
+  },
+
+  "[yaml]": {
+    "editor.tabSize": 2,
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+
+  "[python]": {
+    "editor.tabSize": 4
+  },
+
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/dbt-labs/dbt-jsonschema/main/schemas/latest/dbt_yml_files-latest.json": [
+      "models/**/*.yml",
+      "snapshots/**/*.yml",
+      "seeds/**/*.yml",
+      "analyses/**/*.yml"
+    ],
+    "https://raw.githubusercontent.com/dbt-labs/dbt-jsonschema/main/schemas/latest/dbt_project-latest.json": [
+      "dbt_project.yml"
+    ]
+  },
+
+  "sqlfluff.executablePath": "sqlfluff",
+  "sqlfluff.config": "${workspaceFolder}/.sqlfluff",
+  "sqlfluff.linter.run": "onSave",
+  "sqlfluff.dialect": "bigquery",
+
+  "dbt.profilesDirOverride": "${workspaceFolder}",
+  "dbt.dbtIntegration": "core"
+}
