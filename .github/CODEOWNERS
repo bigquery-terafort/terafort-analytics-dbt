@@ -1,0 +1,31 @@
+# ================================================================
+# CODE OWNERS
+# ================================================================
+# Auto-assigns reviewers to PRs based on which files changed.
+# Required reviewers can be enforced via branch protection rules.
+#
+# Format: <pattern>  <github-handle-or-team>
+# ================================================================
+
+# Default owners for everything in the repo
+*                                   @zulqarnainhaider-corp
+
+# Infrastructure / CI changes need extra scrutiny
+/.github/                           @zulqarnainhaider-corp
+/dbt_project.yml                    @zulqarnainhaider-corp
+/profiles.yml                       @zulqarnainhaider-corp
+/packages.yml                       @zulqarnainhaider-corp
+/requirements.txt                   @zulqarnainhaider-corp
+/.sqlfluff                          @zulqarnainhaider-corp
+/.pre-commit-config.yaml            @zulqarnainhaider-corp
+
+# Marts (final outputs to Looker) — highest review bar
+/models/marts/                      @zulqarnainhaider-corp
+
+# Mappings (orphan campaigns, app master) — business-critical
+/seeds/                             @zulqarnainhaider-corp
+/models/intermediate/               @zulqarnainhaider-corp
+
+# Documentation
+/README.md                          @zulqarnainhaider-corp
+*.md                                @zulqarnainhaider-corp
