@@ -1,0 +1,28 @@
+# ================================================================
+# TERAFORT ANALYTICS — PYTHON DEPENDENCIES
+# ================================================================
+# These are installed by GitHub Actions before running dbt.
+# Versions are pinned for reproducibility — no surprise breakages
+# from upstream releases.
+#
+# To upgrade:
+#   1. Bump version here
+#   2. Open PR
+#   3. CI runs full test suite on dev environment
+#   4. Merge if green
+# ================================================================
+
+# --- dbt Core + BigQuery adapter -------------------------------
+# As of late 2024, dbt-core must be installed explicitly alongside
+# the adapter (was implicit in older versions).
+dbt-core==1.10.0
+dbt-bigquery==1.10.0
+
+# --- Elementary observability ---------------------------------
+# [bigquery] extra installs the BQ-specific dependencies for the
+# `edr` CLI tool used to generate HTML reports.
+elementary-data[bigquery]==0.16.0
+
+# --- Google auth (needed by both dbt and elementary) ----------
+google-cloud-bigquery>=3.20.0,<4.0.0
+google-auth>=2.30.0,<3.0.0
