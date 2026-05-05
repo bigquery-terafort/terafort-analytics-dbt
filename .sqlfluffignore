@@ -1,0 +1,22 @@
+# ================================================================
+# SQLFLUFF IGNORE
+# ================================================================
+# Files/paths excluded from SQL linting.
+# ================================================================
+
+# dbt-generated artifacts (never lint these)
+target/
+dbt_packages/
+
+# Compiled outputs
+**/compiled/
+**/run/
+
+# Snapshots are auto-generated SCD logic
+snapshots/
+
+# Don't lint seeds (CSV files, not SQL)
+seeds/
+
+# Macros may have complex Jinja that confuses sqlfluff
+macros/
