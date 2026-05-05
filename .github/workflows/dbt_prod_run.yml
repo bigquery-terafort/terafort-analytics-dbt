@@ -1,0 +1,107 @@
+name: PROD - Daily Pipeline Run
+
+on:
+  schedule:
+    - cron: '30 8 * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target environment'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - prod
+          - dev
+      full_refresh:
+        description: 'Full refresh'
+        required: false
+        default: false
+        type: boolean
+      skip_freshness:
+        description: 'Skip source freshness check'
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches: [main]
+    paths:
+      - 'models/**'
+      - 'macros/**'
+      - 'dbt_project.yml'
+
+concurrency:
+  group: prod-run
+  cancel-in-progress: false
+
+env:
+  DBT_PROFILES_DIR: ./
+  DBT_GCP_PROJECT: ${{ vars.DBT_GCP_PROJECT }}
+  DBT_GCP_KEYFILE_JSON: ${{ secrets.GCP_SA_KEY }}
+  TARGET: ${{ github.event.inputs.target || 'prod' }}
+  PYTHON_VERSION: '3.11'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  freshness:
+    name: Source freshness check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.inputs.skip_freshness != 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Install dbt packages
+        run: dbt deps --profiles-dir ./
+      - name: Run source freshness check
+        run: dbt source freshness --target ${{ env.TARGET }} --profiles-dir ./
+        continue-on-error: true
+
+  run-pipeline:
+    name: Run dbt pipeline
+    needs: freshness
+    if: always() && (needs.freshness.result == 'success' || needs.freshness.result == 'skipped' || github.event.inputs.skip_freshness == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Install dbt packages
+        run: dbt deps --profiles-dir ./
+      - name: Verify BigQuery connection
+        run: dbt debug --target ${{ env.TARGET }} --profiles-dir ./
+      - name: Run dbt seed
+        run: dbt seed --target ${{ env.TARGET }} --profiles-dir ./
+      - name: Run dbt models
+        run: dbt run --target ${{ env.TARGET }} --profiles-dir ./
+      - name: Run dbt tests
+        run: dbt test --target ${{ env.TARGET }} --profiles-dir ./
+        continue-on-error: true
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-run-${{ github.run_number }}
+          path: |
+            target/run_results.json
+            target/manifest.json
+            logs/dbt.log
+          retention-days: 30
