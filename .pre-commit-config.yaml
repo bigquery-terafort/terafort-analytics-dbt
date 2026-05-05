@@ -1,0 +1,69 @@
+# ================================================================
+# PRE-COMMIT HOOKS
+# ================================================================
+# Runs automatically on `git commit`. Catches bugs BEFORE they hit
+# CI — saves you the round-trip to GitHub.
+#
+# To install (one-time, optional for local devs):
+#   pip install pre-commit
+#   pre-commit install
+#
+# Hooks that run on every commit:
+#   1. Trailing whitespace removal
+#   2. End-of-file fixer
+#   3. YAML syntax check
+#   4. JSON syntax check
+#   5. Detect-secrets (catches accidentally-committed credentials)
+#   6. Large file check (prevents 100MB+ files)
+#   7. Merge conflict marker check
+#   8. Private key detection
+#   9. SQLFluff lint (auto-fix where possible)
+#  10. dbt project YAML validation
+# ================================================================
+
+repos:
+  # --- General code hygiene ------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ['--unsafe']
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=5000']
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # --- Secret detection ----------------------------------------
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: 'package.lock.json|.*\.lock'
+
+  # --- SQL linting ---------------------------------------------
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.0.7
+    hooks:
+      - id: sqlfluff-lint
+        args: ['--config', '.sqlfluff']
+        types: [sql]
+      - id: sqlfluff-fix
+        args: ['--config', '.sqlfluff']
+        types: [sql]
+
+  # --- YAML formatting -----------------------------------------
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: ['-c', '.yamllint']
+
+  # --- Markdown linting ----------------------------------------
+  - repo: https://github.com/igorshubovych/markdow
