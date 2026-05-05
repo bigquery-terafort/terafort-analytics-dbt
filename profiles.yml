@@ -1,0 +1,80 @@
+# ================================================================
+# TERAFORT ANALYTICS — dbt PROFILES
+# ================================================================
+# This file lives in the REPO ROOT (not ~/.dbt/) because GitHub
+# Actions reads it from there.
+#
+# All credentials come from environment variables — no secrets
+# are committed. GitHub Actions injects them via `secrets` and
+# `vars` blocks defined in .github/workflows/*.yml.
+#
+# Two targets:
+#   dev   → terafort_dev_*    (manual runs from any branch)
+#   prod  → terafort_prod_*   (only main branch + scheduled cron)
+#
+# Default target = dev (safer — you must explicitly run prod)
+# ================================================================
+
+terafort:
+  target: dev
+
+  outputs:
+
+    # --- DEVELOPMENT ------------------------------------------
+    # Used by:
+    #   - Pull request CI (validates changes before merge)
+    #   - Manual workflow_dispatch runs
+    dev:
+      type: bigquery
+      method: service-account-json
+      project: "{{ env_var('DBT_GCP_PROJECT', 'terafort') }}"
+      dataset: "terafort_dev_staging"
+      location: US
+      threads: 4
+      timeout_seconds: 600
+      priority: interactive
+      retries: 2
+      keyfile_json: "{{ env_var('DBT_GCP_KEYFILE_JSON') | as_native }}"
+
+    # --- PRODUCTION -------------------------------------------
+    # Used by:
+    #   - Daily scheduled GitHub Actions cron
+    #   - Tagged releases (optional)
+    prod:
+      type: bigquery
+      method: service-account-json
+      project: "{{ env_var('DBT_GCP_PROJECT', 'terafort') }}"
+      dataset: "terafort_prod_staging"
+      location: US
+      threads: 8
+      timeout_seconds: 900
+      priority: interactive
+      retries: 3
+      keyfile_json: "{{ env_var('DBT_GCP_KEYFILE_JSON') | as_native }}"
+
+
+# ================================================================
+# ELEMENTARY PROFILE
+# ================================================================
+# Elementary's CLI (`edr`) needs its own profile entry that points
+# at the same project but a separate dataset (auto-managed).
+# ================================================================
+elementary:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account-json
+      project: "{{ env_var('DBT_GCP_PROJECT', 'terafort') }}"
+      dataset: "terafort_dev_marts_elementary"
+      location: US
+      threads: 4
+      keyfile_json: "{{ env_var('DBT_GCP_KEYFILE_JSON') | as_native }}"
+    prod:
+      type: bigquery
+      method: service-account-json
+      project: "{{ env_var('DBT_GCP_PROJECT', 'terafort') }}"
+      dataset: "terafort_prod_marts_elementary"
+      location: US
+      threads: 4
+      keyfile_json: "{{ env_var('DBT_GCP_KEYFILE_JSON') | as_native }}"
