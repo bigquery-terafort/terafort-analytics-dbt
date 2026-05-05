@@ -1,0 +1,36 @@
+# ================================================================
+# EDITORCONFIG
+# ================================================================
+# Universal editor settings. Works in VS Code, IntelliJ, vim, etc.
+# Ensures every contributor uses same indentation/line endings.
+# ================================================================
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# SQL files: 4 spaces (more readable for complex queries)
+[*.sql]
+indent_size = 4
+
+# Python: 4 spaces (PEP 8)
+[*.py]
+indent_size = 4
+
+# Markdown: preserve trailing whitespace (line breaks)
+[*.md]
+trim_trailing_whitespace = false
+
+# YAML / JSON: 2 spaces
+[*.{yml,yaml,json}]
+indent_size = 2
+
+# Makefile uses tabs, period
+[Makefile]
+indent_style = tab
