@@ -24,5 +24,5 @@ dbt-bigquery==1.10.0
 elementary-data[bigquery]==0.16.0
 
 # --- Google auth (needed by both dbt and elementary) ----------
-google-cloud-bigquery>=3.20.0,<4.0.0
+google-cloud-bigquery>=3.42.0,<4.0.0
 google-auth>=2.30.0,<3.0.0
